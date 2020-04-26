@@ -58,13 +58,13 @@ class MainActivity : AppCompatActivity() {
             }, 2000);
              */
             surface.visibility = View.VISIBLE
-            cameraUtil.create(surface,this@MainActivity)
+            cameraUtil.create(surface, this@MainActivity)
             cameraUtil.changeCamera()
-            var  a = path + File.separator + "2.mp4"
+            var a = path + File.separator + "2.mp4"
             cameraUtil.startPrepare(a, "")
             Handler().postDelayed({
                 cameraUtil.startRecord()
-            },2000)
+            }, 2000)
 
         }
 
@@ -73,6 +73,18 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+        btnBegin.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) btnBegin.setBackgroundColor(resources.getColor(R.color.colorPrimary))
+            else
+                btnBegin.setBackgroundColor(0xFFFFFF)
+        }
+
+        btnEnd.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) btnEnd.setBackgroundColor(resources.getColor(R.color.colorPrimary))
+            else
+                btnEnd.setBackgroundColor(0xFFFFFF)
+
+        }
 
     }
 }

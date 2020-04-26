@@ -1,3 +1,4 @@
 rootProject.name='CameraTest'
 include ':app'
 include ':test'
+include ':camera2'

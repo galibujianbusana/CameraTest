@@ -7,12 +7,10 @@ import android.hardware.Camera.open
 import android.media.CamcorderProfile
 import android.media.MediaCodec
 import android.media.MediaRecorder
-import android.os.Build
 import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import android.view.ViewGroup
 import java.io.File
 
 /**
@@ -22,10 +20,11 @@ import java.io.File
  */
 class CameraUtil {
 
+
     companion object {
-        const val TAG = "CameraUtil"
-        fun log(string: String){
-            Log.d(TAG,string)
+        private const val TAG = "CameraUtil"
+        fun log(string: String) {
+            Log.d(TAG, string)
         }
     }
 
@@ -37,9 +36,6 @@ class CameraUtil {
     var callback: SurfaceHolder.Callback? = null
     var height = 240
     var width = 320
-    var screenWidth = 0
-    var screenHeight = 0
-    var mediaCodec: MediaCodec? = null
 
 
     fun create(mSurfaceView: SurfaceView, mContext: Activity) {
@@ -52,14 +48,14 @@ class CameraUtil {
                 log("this is surfaceCreated ")
                 camera = open()
                 getVideoSize()
-                var  params = surfaceView!!.layoutParams
+                var params = surfaceView!!.layoutParams
                 params.width = width
                 params.height = height
                 surfaceView!!.layoutParams = params
                 if (mediaRecorder == null)
                     mediaRecorder = MediaRecorder()
                 else
-                    mediaRecorder?.reset()
+                    mediaRecorder!!.reset()
             }
 
             override fun surfaceChanged(
@@ -74,10 +70,11 @@ class CameraUtil {
 
             override fun surfaceDestroyed(holder: SurfaceHolder?) {
                 log("this is surfaceDestroyed ")
-                camera?.release()
-                camera = null
+                if (camera != null) {
+                    camera?.release()
+                    camera = null
+                }
             }
-
 
 
         }
@@ -88,6 +85,12 @@ class CameraUtil {
     fun doChange(holder: SurfaceHolder) {
         camera!!.setPreviewDisplay(holder)
         var x = getDisplayRotation(context!!)
+        log("这里设置旋转方向2: $x - - 113 ." )
+        if (x == 90) {
+            camera!!.setDisplayOrientation(0)
+        } else if (x == 0) {
+            camera!!.setDisplayOrientation(90)
+        }
         camera!!.startPreview()
     }
 
@@ -97,31 +100,22 @@ class CameraUtil {
         cameraCount = Camera.getNumberOfCameras()
         for (x in 0..cameraCount) {
             log("这里是camera id $x")
-            Camera.getCameraInfo(x,cameraInfo)
-            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT ) {
-                if(camera != null){
-                    camera!!.stopPreview()
-                    camera!!.release()
-                    camera = null
-                }
+            Camera.getCameraInfo(x, cameraInfo)
+            if (cameraInfo.facing == CameraInfo.CAMERA_FACING_BACK) {
+
+                camera?.stopPreview()
+                camera?.release()
+                camera = null
+
                 camera = Camera.open(x)
                 camera!!.setPreviewDisplay(surfaceView!!.holder)
                 var or = getDisplayRotation(context!!)
                 camera!!.setDisplayOrientation(or)
-                when (x) {
-                    0 -> {
-                        camera?.setDisplayOrientation(90)
-                    }
-                    90 -> {
-                        camera?.setDisplayOrientation(0)
-                    }
-                    180 -> {
-                        camera?.setDisplayOrientation(270)
-
-                    }
-                    270 -> {
-                        camera?.setDisplayOrientation(180)
-                    }
+                log("这里设置旋转方向1: $or - - 113 ." )
+                if (x == 90) {
+                    camera!!.setDisplayOrientation(0)
+                } else if (x == 0) {
+                    camera!!.setDisplayOrientation(90)
                 }
                 camera!!.startPreview()
                 isCheck = true
@@ -135,14 +129,14 @@ class CameraUtil {
 
     fun stopRecord() {
 
-        camera?.lock()
-        camera?.stopPreview()
-        camera?.release()
+        camera!!.lock()
+        camera!!.stopPreview()
+        camera!!.release()
         camera = null
 
-        mediaRecorder?.setOnErrorListener(null)
-        mediaRecorder?.stop()
-        mediaRecorder?.release()
+        mediaRecorder!!.setOnErrorListener(null)
+        mediaRecorder!!.stop()
+        mediaRecorder!!.release()
         mediaRecorder = null
         surfaceView = null
 
@@ -150,9 +144,9 @@ class CameraUtil {
     }
 
     fun destroy() {
-        mediaRecorder?.setOnErrorListener(null)
-        mediaRecorder?.stop()
-        mediaRecorder?.release()
+        mediaRecorder!!.setOnErrorListener(null)
+        mediaRecorder!!.stop()
+        mediaRecorder!!.release()
         mediaRecorder = null
         camera?.release()
         camera = null
@@ -160,21 +154,21 @@ class CameraUtil {
 
     fun startPrepare(path: String, name: String) {
 
-        camera?.unlock()
+        camera!!.unlock()
 
-        if (mediaRecorder == null){
+        if (mediaRecorder == null) {
             mediaRecorder = MediaRecorder()
         }
 
         mediaRecorder?.setCamera(camera!!)
         //设置音视频数据源
-       // mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
+        mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
         mediaRecorder?.setVideoSource(MediaRecorder.VideoSource.CAMERA)
         // 设置outPutFormat
         mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
         // set VideoEncoder AudioEncoder
-         mediaRecorder?.setVideoSource(MediaRecorder.VideoEncoder.H264)
-      //  mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+        mediaRecorder?.setVideoEncoder(MediaRecorder.VideoEncoder.H264)
+        mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
 
         mediaRecorder?.setVideoEncodingBitRate(500 * 1024)
         mediaRecorder?.setVideoSize(width, height)
@@ -182,13 +176,16 @@ class CameraUtil {
         var file = File(path)
         if (!file.exists())
             file.mkdirs()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            var  s = path + File.separator +".mp4"
-            mediaRecorder?.setOutputFile(s)
-        }
+
+
+        mediaRecorder?.setOutputFile(path)
+        var fileKeep = File(path)
+        if (fileKeep.exists()) fileKeep.delete()
+
 
         mediaRecorder?.setPreviewDisplay(surfaceView?.holder?.surface)
-        mediaRecorder?.setOrientationHint(270)
+        //控制录制视频的方向
+        mediaRecorder?.setOrientationHint(90)
         mediaRecorder?.prepare()
 
     }
@@ -197,7 +194,7 @@ class CameraUtil {
         mediaRecorder?.start()
     }
 
-    fun getDisplayRotation(activity: Activity): Int {
+    private fun getDisplayRotation(activity: Activity): Int {
         var rotation = activity.windowManager.defaultDisplay.rotation
         when (rotation) {
             Surface.ROTATION_0 -> return 0
@@ -210,44 +207,35 @@ class CameraUtil {
 
 
     fun getVideoSize() {
-        Log.d(TAG, "getVideoSize: ")
+        log("getVideoSize: ")
         val parameters = camera!!.parameters
-        val videoSize =
-            parameters.supportedVideoSizes
-        if (videoSize != null) {
+        val videoSize = parameters.supportedVideoSizes ?: return
+        for (i in videoSize.indices) {
+            val width1 = videoSize[i].width
+            val height1 = videoSize[i].height
+            if (width1 == 1920 && height1 == 1080) {
+                width = width1
+                height = height1
+                return
+            }
+            log("getVideoSize:----w:-- " + videoSize[i].width + "---h:--" + videoSize[i].height)
+        }
+        if (width != 1920 && height != 1080) {
             for (i in videoSize.indices) {
                 val width1 = videoSize[i].width
                 val height1 = videoSize[i].height
-                if (width1 == screenHeight) {
-                    if (height1 == screenWidth) {
-                        width = height1
-                        height = width1
+                if (width1 in 1000..1500) {
+                    if (height1 in 600..920) {
+                        width = width1
+                        height = height1
                         break
                     }
                 }
-                Log.d(
-                    TAG,
-                    "getVideoSize:----w:-- " + videoSize[i].width + "---h:--" + videoSize[i].height
-                )
-            }
-            if (width != 320 && height != 240) {
-                for (i in videoSize.indices) {
-                    val width1 = videoSize[i].width
-                    val height1 = videoSize[i].height
-                    if (width1 in 300..500) {
-                        if (height1 in 200..500) {
-                            width = width1
-                            height = height1
-                            break
-                        }
-                    }
-                    Log.d(
-                        TAG,
-                        "getVideoSize:----w:-- " + videoSize[i].width + "---h:--" + videoSize[i].height
-                    )
-                }
+                log("getVideoSize:----w:-- " + videoSize[i].width + "---h:--" + videoSize[i].height)
             }
         }
+        log("最后的寛高为: getVideoSize  - - > $width - - $height")
+
     }
 
 
@@ -260,16 +248,10 @@ class CameraUtil {
     }
 
 
-    fun setScreenSize(w: Int, h: Int) {
-        this.screenHeight = h
-        this.screenWidth = w
-    }
 
 
-    fun setCameraDisplayOrientation(
-        activity: Activity?,
-        cameraId: Int, camera: Camera
-    ) {
+
+    fun setCameraDisplayOrientation(activity: Activity?, cameraId: Int, camera: Camera) {
         // See android.hardware.Camera.setCameraDisplayOrientation for
         // documentation.
         val info = CameraInfo()

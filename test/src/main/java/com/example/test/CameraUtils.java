@@ -124,7 +124,8 @@ public class CameraUtils {
         cameraCount = Camera.getNumberOfCameras();
         for (int i = 0; i < cameraCount; i++) {
             Camera.getCameraInfo(i, cameraInfo);
-            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            // 设置为后置
+            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
                 if (camera != null) {
                     camera.stopPreview();
                     camera.release();
@@ -222,12 +223,13 @@ public class CameraUtils {
         }
         mediaRecorder.setCamera(camera);
         // 设置音视频数据源
-        //mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
         // setOutPutFormat
         mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         // set videoEncoder audioEncoder  都放在outputFormat 后面
         mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+        mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
         mediaRecorder.setVideoEncodingBitRate(500 * 1024);
         mediaRecorder.setVideoSize(width, height);
         // mediaRecorder.setVideoFrameRate(14);
@@ -307,6 +309,7 @@ public class CameraUtils {
 
         }
 
+        Log.d(TAG, "最终数据 getVideoSize:----w:-- " + width + "---h:--" + height);
 
     }
 
