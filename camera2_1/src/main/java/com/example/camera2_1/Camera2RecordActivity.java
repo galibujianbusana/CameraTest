@@ -167,7 +167,7 @@ public class Camera2RecordActivity extends AppCompatActivity implements TextureV
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int i, int i1) {
         Log.d(TAG, "onSurfaceTextureSizeChanged: ");
-        configureTransform(width, height);
+        // configureTransform(width, height);
     }
 
     @Override
@@ -201,7 +201,7 @@ public class Camera2RecordActivity extends AppCompatActivity implements TextureV
             mPreviewSize = Camera2Util.getMinPreSize(map.getOutputSizes(SurfaceTexture.class), width, height, Camera2Config.PREVIEW_MAX_HEIGHT);
             Log.e(TAG, mPreviewSize.getWidth() + "----" + mPreviewSize.getHeight());
             Log.e(TAG, height + "----" + width);
-            configureTransform(width, height);
+            // configureTransform(width, height);
             mMediaRecorder = new MediaRecorder();
         } catch (Exception e) {
             e.printStackTrace();
@@ -228,10 +228,8 @@ public class Camera2RecordActivity extends AppCompatActivity implements TextureV
         @Override
         public void onOpened(CameraDevice camera) {
             mCameraDevice = camera;
-            //startPreview();
-
             if (null != mTextureView) {
-                configureTransform(mTextureView.getWidth(), mTextureView.getHeight());
+               // configureTransform(mTextureView.getWidth(), mTextureView.getHeight());
             }
         }
 
@@ -446,33 +444,7 @@ public class Camera2RecordActivity extends AppCompatActivity implements TextureV
         openCamera(mCameraId);
     }
 
-    /**
-     * 屏幕方向发生改变时调用转换数据方法
-     *
-     * @param viewWidth  mTextureView 的宽度
-     * @param viewHeight mTextureView 的高度
-     */
-    private void configureTransform(int viewWidth, int viewHeight) {
-        if (null == mTextureView || null == mPreviewSize) {
-            return;
-        }
-        int rotation = getWindowManager().getDefaultDisplay().getRotation();
-        Matrix matrix = new Matrix();
-        RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
-        RectF bufferRect = new RectF(0, 0, mPreviewSize.getHeight(), mPreviewSize.getWidth());
-        float centerX = viewRect.centerX();
-        float centerY = viewRect.centerY();
-        if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
-            bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
-            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
-            float scale = Math.max(
-                    (float) viewHeight / mPreviewSize.getHeight(),
-                    (float) viewWidth / mPreviewSize.getWidth());
-            matrix.postScale(scale, scale, centerX, centerY);
-            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
-        }
-        mTextureView.setTransform(matrix);
-    }
+
 
     @Override
     protected void onResume() {
