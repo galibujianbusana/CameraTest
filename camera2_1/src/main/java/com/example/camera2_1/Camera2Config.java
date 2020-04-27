@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.example.camera2_1;
 
 
 /**

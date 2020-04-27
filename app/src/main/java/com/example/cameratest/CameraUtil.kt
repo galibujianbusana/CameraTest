@@ -12,6 +12,7 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import java.io.File
+import kotlin.math.max
 
 /**
  * @ClassName CameraUtil
@@ -47,7 +48,8 @@ class CameraUtil {
             override fun surfaceCreated(holder: SurfaceHolder?) {
                 log("this is surfaceCreated ")
                 camera = open()
-                getVideoSize()
+              //  getVideoSize()
+                getMaxVideoSize()
                 var params = surfaceView!!.layoutParams
                 params.width = width
                 params.height = height
@@ -170,7 +172,7 @@ class CameraUtil {
         mediaRecorder?.setVideoEncoder(MediaRecorder.VideoEncoder.H264)
         mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
 
-        mediaRecorder?.setVideoEncodingBitRate(500 * 1024)
+        mediaRecorder?.setVideoEncodingBitRate(1000 * 1024)
         mediaRecorder?.setVideoSize(width, height)
 
         var file = File(path)
@@ -236,6 +238,24 @@ class CameraUtil {
         }
         log("最后的寛高为: getVideoSize  - - > $width - - $height")
 
+    }
+
+    fun getMaxVideoSize(){
+        val parameters = camera!!.parameters
+        val videoSize = parameters.supportedVideoSizes ?: return
+        var maxW =0
+        for ( i in 0..videoSize.size){
+            var  width = videoSize[i].width
+            maxW = max(maxW,width)
+        }
+
+        for ( i in 0..videoSize.size){
+            var  width = videoSize[i].width
+           if(maxW == width){
+               this.height = videoSize[i].height
+               this.width = maxW
+           }
+        }
     }
 
 
